@@ -1,0 +1,99 @@
+<html>
+    <head>
+         <style>
+            h1 {
+                background-color: black;
+                color: white;
+                font-family: serif;
+                font-style: bold;
+            }
+            ul {
+                display: table;
+                margin: 0px;
+                padding: 0px;
+            }
+            li {
+                list-style: none;
+            }
+            button {
+                background-color: steelblue;
+                color: white;
+                border-style: none;
+                padding: 5px;
+                width: 50px;
+            }
+        </style>
+        <script src="https://unpkg.com/react@15.3.0/dist/react.js"></script>
+        <script src="https://unpkg.com/react-dom@15.3.0/dist/react-dom.js"></script>
+        <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+        <script src="https://unpkg.com/jquery@3.1.0/dist/jquery.min.js"></script>
+        <script src="https://unpkg.com/remarkable@1.6.2/dist/remarkable.min.js"></script>
+    </head>
+    
+    <body>
+        <div id="example"></div>
+        <script type="text/babel" >
+            var Total = React.createClass({
+                getInitialState: function() {
+                    return {countries: ["USA","Mexico","Canada"]};
+                },
+
+                addCountry: function(newCountry) {
+                    var newCountries = this.state.countries.concat([newCountry]);
+                    this.setState({countries: newCountries});
+                },
+
+                render: function() {
+                    return (
+                        <div>
+                            <h1>Gapiminder - Wealth and Health of Nations</h1>
+                            <h3>Countries</h3>
+                            <InputArea onAddCountry={this.addCountry}/>
+                            <CountryList data={this.state.countries}/>
+                        </div>
+                    );
+                }
+            });
+
+            var InputArea = React.createClass({
+                getInitialState: function() {
+                    return {newCountry: ''};
+                },
+                handleCountryChange: function(e) {
+                    this.setState({newCountry: e.target.value});
+                },
+                handleSubmit: function(event) {
+                    this.props.onAddCountry(this.state.newCountry);
+                },
+                render: function() {
+                    return (
+                        <div>
+                            Name <input type="text" placeholder="add a country" onChange={this.handleCountryChange} /> <button onClick={this.handleSubmit}>Add</button>
+                            <hr/>
+                        </div>
+                    );
+                }
+            });
+
+            var CountryList = React.createClass({
+                render: function() {
+                    var list = this.props.data.map(function(country) {
+                        return (
+                            <li>{country}</li>
+                        );
+                    });
+                    return (
+                        <ul>
+                            {list}
+                        </ul>
+                    );
+                }
+            });
+
+            ReactDOM.render(
+                <Total />,
+                document.getElementById("example")
+            );
+        </script>
+  </body>
+</html>

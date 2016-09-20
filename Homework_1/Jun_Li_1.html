@@ -1,0 +1,53 @@
+<html>
+    <head>
+        <style>
+            h1 {
+                background-color: black;
+                color: white;
+                font-family: serif;
+                font-style: bold;
+            }
+            ul {
+                display: table;
+                margin: 0px;
+                padding: 0px;
+            }
+            li {
+                list-style: none;
+            }
+            button {
+                background-color: steelblue;
+                color: white;
+                border-style: none;
+                padding: 5px;
+                width: 50px;
+            }
+        </style>
+    </head>
+    <script>
+        function addCountry() {
+            var newCountry = document.getElementById("country_text").value;
+            var list = document.getElementById("country_list");
+            var newElement = document.createElement("li");
+            newElement.innerHTML = newCountry;
+            list.appendChild(newElement);
+        }
+    </script>
+    <body>
+        <div>
+            <h1>
+                Gapiminder - Wealth and Health of Nations
+            </h1>
+            <h3>
+                Countries
+            </h3>
+            Name <input type="text" id="country_text"/> <button onclick="addCountry();">Add</button>
+            <hr/>
+            <ul id="country_list">
+                <li>USA</li>
+                <li>Mexico</li>
+                <li>Canada</li>
+            </ul>
+        </div>
+    </body>
+</html>
