@@ -1,0 +1,76 @@
+<html>
+    <head>
+         <style>
+            h1 {
+                background-color: black;
+                color: white;
+                font-family: serif;
+                font-style: bold;
+            }
+            ul {
+                display: table;
+                margin: 0px;
+                padding: 0px;
+            }
+            li {
+                list-style: none;
+            }
+        </style>
+        <script src="https://unpkg.com/react@15.3.0/dist/react.js" charset="utf-8"></script>
+        <script  charset="utf-8" src="https://unpkg.com/react-dom@15.3.0/dist/react-dom.js"></script>
+        <script charset="utf-8" src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+        <script charset="utf-8" src="https://unpkg.com/jquery@3.1.0/dist/jquery.min.js"></script>
+        <script charset="utf-8" src="https://unpkg.com/remarkable@1.6.2/dist/remarkable.min.js"></script>
+        <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    </head>
+    
+    <body>
+        <div id="example"></div>
+        <script type="text/babel">
+            var Total = React.createClass({
+                getInitialState: function() {
+                    return {
+                        loading: true,
+                        error: null,
+                        data: null
+                    };
+                },
+
+                componentDidMount() {
+                    this.props.promise.then(
+                        value => this.setState({loading: false, data: value}),
+                        error => this.setState({loading: false, error: error})
+                    );
+                },
+
+                render: function() {
+                    if (this.state.loading) {
+                        return <span>Loading...</span>
+                    }
+                    else if (this.state.error !== null) {
+                        return <span>Error: {this.state.error.message}</span>
+                    }
+                    else {
+                        var countries = this.state.data;
+                        var countryList = countries.map(function(country, index) {
+                                    return (<li key={index}>{country.name}</li>);
+                        });
+                        return (
+                            <div>
+                                <h1>Gapiminder - Wealth and Health of Nations</h1>
+                                <h3>Countries</h3>
+                                <ul>{countryList}</ul>
+                            </div>
+                        );    
+                    }
+                    
+                }
+            });
+
+            ReactDOM.render(
+                <Total promise={$.getJSON('https://raw.githubusercontent.com/CristianFelix/infoviz/master/gapminder.json')} />,
+                document.getElementById("example")
+            );
+        </script>
+  </body>
+</html>

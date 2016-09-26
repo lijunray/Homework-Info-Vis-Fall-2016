@@ -1,0 +1,52 @@
+<html>
+    <head>
+    	<title>Gapminder Wealth and Health</title>
+        <style>
+            h1 {
+                background-color: black;
+                color: white;
+                font-family: serif;
+                font-style: bold;
+            }
+        </style>
+        
+    </head>
+    
+    <body>
+        <div>
+            <h1>
+                Gapiminder - Wealth and Health of Nations
+            </h1>
+            <h3>
+                Countries
+            </h3>
+            <div id="country_list"></div>
+        </div>
+    </body>
+    <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script>
+        var country_list = d3.select("#country_list");
+        d3.json("https://raw.githubusercontent.com/CristianFelix/infoviz/master/gapminder.json", function(error, result) {
+        	if (error) {
+        		console.log(error);
+        	}
+            else {
+                var countries = result;
+                render(countries);   
+            }
+        });
+
+        function render(countries) {
+        	var changes = country_list.selectAll("div")
+        		.data(countries, function(d) {
+        			return d.name;
+        		});
+        	changes.enter()
+        			.append("div")
+        			.text(function(d) {
+        				return d.name;
+        			});
+        }
+
+    </script>
+</html>
