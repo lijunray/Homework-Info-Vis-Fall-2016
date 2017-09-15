@@ -1,0 +1,99 @@
+<html>
+    <head>
+    	<title>Gapminder Wealth and Health</title>
+        <style>
+            h1 {
+                background-color: black;
+                color: white;
+                font-family: serif;
+                font-style: bold;
+            }
+        </style>
+        
+    </head>
+    
+    <body>
+        <div>
+            <h1>
+                Gapiminder - Wealth and Health of Nations
+            </h1>
+            <div style="float: left">
+                <h3>
+                    Countries
+                </h3>
+                <div id="country_list"></div>
+            </div>
+            <div style="padding: 100px">
+                <svg width="700" height="400">
+                    <rect width="700" height="400" fill="none" 
+                        stroke="black"
+                        stroke-width="1"></rect>
+                    <g id="dotGroup"></g>
+                </svg>
+            </div>
+        </div>
+    </body>
+    <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script>
+        var country_list = d3.select("#country_list");
+        d3.json("https://raw.githubusercontent.com/CristianFelix/infoviz/master/Week%203/newData.json", function(error, result) {
+        	if (error) {
+        		console.log(error);
+        	}
+            else {
+                var countries = result;
+                var filteredCountries = countries.filter(
+                    (country) => country.income[2008] !== undefined && 
+                                country.lifeExpectancy[2008] !== undefined &&
+                                country.population[2008] !== undefined
+                );
+                list(countries); 
+                draw(filteredCountries);
+            }
+        });
+
+        var viz = d3.select("#dotGroup");
+        var width = 700,
+            height = 400,
+            margin = { top: 20, left: 20, right: 20, bottom: 20 },
+            innerWidth = width - margin.left - margin.right,
+            innerHeight = height - margin.top - margin.bottom;
+        
+        var xScale = d3.scale.linear().range([0, innerWidth]),
+            yScale = d3.scale.linear().range([innerHeight, 0])
+            sScale = d3.scale.log().range([1, 15]);
+
+        viz.attr("transform",
+                    "translate(" + margin.left + "," + margin.top + ")");
+
+        function list(countries) {
+        	var changes = country_list.selectAll("div")
+        		.data(countries, function(d) {
+        			return d.name;
+        		});
+        	changes.enter()
+        		.append("div")
+        		.text(function(d) {
+        			return d.name;
+        		});
+        }
+
+        function draw(countries) {
+            var dataPoints = viz.selectAll("circle").data(countries);
+
+            xScale.domain(d3.extent(countries, (country) => country.income[2008] ));
+            yScale.domain(d3.extent(countries, (country) => country.lifeExpectancy[2008] ));
+            sScale.domain(d3.extent(countries, (country) => country.population[2008]));
+
+            var colorScale = d3.scale.category20();
+            dataPoints.enter()
+                .append("circle")
+                .attr("cx", (country, i) => xScale(country.income[2008] ))
+                .attr("cy", (country, i) => yScale(country.lifeExpectancy[2008] ))
+                .attr("fill", (country, i) => colorScale(i))
+                .attr("r", (country, i) => sScale(country.population[2008] ))
+                .attr("opacity", 0.8);
+        }
+
+    </script>
+</html>

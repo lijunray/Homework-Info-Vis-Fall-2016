@@ -1,0 +1,131 @@
+<html>
+    <head>
+    	<title>Gapminder Wealth and Health</title>
+        <style>
+            h1 {
+                background-color: black;
+                color: white;
+                font-family: serif;
+                font-style: bold;
+            }
+            .domain {
+                fill: none;
+                stroke: #000;
+            }
+            .tick {
+                font-size: 12;
+            }
+            .tick line {
+                stroke: #ccc;
+            }
+        </style>
+        
+    </head>
+    
+    <body>
+        <div>
+            <h1>
+                Gapiminder - Wealth and Health of Nations
+            </h1>
+            <div style="float: left">
+                <h3>
+                    Countries
+                </h3>
+                <div id="country_list"></div>
+            </div>
+            <div style="padding: 100px">
+                <svg width="700" height="400" id="viz">
+                    <rect width="700" height="400" fill="none" 
+                        stroke="black"
+                        stroke-width="1"></rect>
+                    <g id="dotGroup"></g>
+                </svg>
+            </div>
+        </div>
+    </body>
+    <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script>
+        var country_list = d3.select("#country_list");
+        d3.json("https://raw.githubusercontent.com/CristianFelix/infoviz/master/Week%203/newData.json", function(error, result) {
+        	if (error) {
+        		console.log(error);
+        	}
+            else {
+                var countries = result;
+                var filteredCountries = countries.filter(
+                    (country) => country.income[2008] !== undefined && 
+                                country.lifeExpectancy[2008] !== undefined &&
+                                country.population[2008] !== undefined
+                );
+                list(countries); 
+                draw(filteredCountries);
+            }
+        });
+
+
+
+        var width = 700,
+            height = 400,
+            margin = { top: 20, left: 20, right: 20, bottom: 20 },
+            innerWidth = width - margin.left - margin.right,
+            innerHeight = height - margin.top - margin.bottom;
+
+        var viz = d3.select("#dotGroup");
+        var chart = d3.select("#viz");
+        var xAxisGroup = chart.append("g")
+            .attr("transform", "translate(" + margin.left + "," + (innerHeight + margin.top) + ")");
+        var yAxisGroup = chart.append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        
+        var xScale = d3.scale.linear().range([0, innerWidth]),
+            yScale = d3.scale.linear().range([innerHeight, 0])
+            sScale = d3.scale.linear().range([20, 1000]);
+
+        viz.attr("transform",
+                    "translate(" + margin.left + "," + margin.top + ")");
+
+        function list(countries) {
+        	var changes = country_list.selectAll("div")
+        		.data(countries, function(d) {
+        			return d.name;
+        		});
+        	changes.enter()
+        		.append("div")
+        		.text(function(d) {
+        			return d.name;
+        		});
+        }
+
+        function draw(countries) {
+            var dataPoints = viz.selectAll("circle").data(countries);
+
+            xScale.domain([0, d3.max(countries, (country) => country.income[2008])]);
+            yScale.domain(d3.extent(countries, (country) => country.lifeExpectancy[2008] ));
+            sScale.domain(d3.extent(countries, (country) => country.population[2008]));
+
+            var colorScale = d3.scale.category20();
+
+            var xAxis = d3.svg.axis()
+                .scale(xScale)
+                .tickSize(-innerHeight)
+                .orient("bottom");
+            
+            var yAxis = d3.svg.axis()
+                .scale(yScale)
+                .tickSize(-innerWidth)                
+                .orient("left");
+
+            xAxisGroup.call(xAxis);
+            yAxisGroup.call(yAxis);
+
+            dataPoints.enter()
+                .append("circle")
+                .attr("cx", (country, i) => xScale(country.income[2008] ))
+                .attr("cy", (country, i) => yScale(country.lifeExpectancy[2008] ))
+                .attr("fill", (country, i) => colorScale(country.region))
+                .attr("r", (country, i) => Math.sqrt(sScale(country.population[2008])/Math.PI))
+                .attr("opacity", 0.9);
+        }
+
+    </script>
+</html>
