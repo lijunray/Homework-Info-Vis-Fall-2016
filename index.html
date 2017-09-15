@@ -1,10 +1,212 @@
 <html>
-	<head>
-	</head>
-	<body>
-		<div>
-			Hello!
-		</div>
-	</body>
+
+  <head>
+    <title>Gapminder Wealth and Health</title>
+    <style>
+      h1 {
+        background-color: black;
+        color: white;
+        font-family: serif;
+        font-style: bold;
+      }
+      
+      .domain {
+        fill: none;
+        stroke: #000;
+      }
+      
+      .tick {
+        font-size: 12;
+      }
+      
+      .tick line {
+        stroke: #ccc;
+      }
+      
+      circle {
+        opacity: 0.7
+      }
+      
+      #tooltip {
+        position: absolute;
+        top: 0;
+        left: 0;
+        background-color: rgba(255, 255, 255, 0.8);
+        padding: 5;
+        border: solid 1px black;
+        visibility: hidden;
+        transition: all 0.5s
+      }
+    </style>
+
+  </head>
+
+  <body>
+    <div>
+      <h1>
+        Gapiminder - Wealth and Health of Nations
+      </h1>
+      <div style="float: left">
+        <h3>
+          Countries
+        </h3>
+        <div id="country_list"></div>
+      </div>
+      <div>
+        <svg width="700" height="400" id="viz">
+          <rect width="700" height="400" fill="none" stroke="black" stroke-width="1"></rect>
+          <g id="dotGroup"></g>
+        </svg>
+      </div>
+    </div>
+    <input type="range" 
+          min="1900" 
+          max="2009" 
+          value="2008"
+          id="yearSelect"
+          onchange="setYear(this.value)" 
+          style="width: 700">
+    <div id="tooltip">
+      Tooltip
+    </div>
+  </body>
+  <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+  <script>
+    var year = 2008;
+    var data;
+    var country_list = d3.select("#country_list");
+    d3.json("https://raw.githubusercontent.com/CristianFelix/infoviz/master/Week%203/newData.json", function(error, result) {
+      if (error) {
+        console.log(error);
+      }
+      else {
+        data = result;
+        render(result);
+      }
+    });
+
+    function render(countries) {
+        var filteredCountries = countries.filter(
+            (country) => country.income[year] !== undefined && 
+                        country.lifeExpectancy[year] !== undefined &&
+                        country.population[year] !== undefined
+        );
+
+        filteredCountries.sort((a, b) => d3.ascending(a.name, b.name));
+
+        list(filteredCountries); 
+        draw(filteredCountries);
+    }
+
+    var width = 700;
+    var height = 400;
+    var margin = { top: 20, left: 20, right: 20, bottom: 20 };
+    var innerWidth = width - margin.left - margin.right;
+    var innerHeight = height - margin.top - margin.bottom;
+
+    var viz = d3.select("#dotGroup");
+    var chart = d3.select("#viz");
+    var xAxisGroup = chart.append("g")
+        .attr("transform", "translate(" + margin.left + "," + (innerHeight + margin.top) + ")");
+    var yAxisGroup = chart.append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        
+    var xScale = d3.scale.linear().range([0, innerWidth]),
+        yScale = d3.scale.linear().range([innerHeight, 0])
+        sScale = d3.scale.linear().range([20, 1000]);
+
+    var yearLabel = chart.append("text").text(year).style({"font-size": 50, "fill": "#ccc"}).attr("dx", 50).attr("dy", 70);
+
+    viz.attr("transform",
+                "translate(" + margin.left + "," + margin.top + ")");
+
+    function highlight(name) {
+      viz.selectAll("circle").style("stroke", (d, i) => d.name == name ? "black" : undefined);
+      country_list.selectAll("div")
+        .style("background-color", (d, i) => d.name == name ? "black" : undefined)
+        .style("color", (d, i) => d.name == name ? "white" : undefined);          
+    }
+
+    function unHighlight() {
+      viz.selectAll("circle").style("stroke", undefined);          
+      country_list.selectAll("div")
+        .style("background-color", undefined)
+        .style("color", undefined);          
+    }
+
+    function setYear(newYear) {
+      year = newYear;
+      yearLabel.text(year);
+      render(data);
+    }
+
+    function list(countries) {
+      var changes = country_list.selectAll("div")
+        .data(countries, function(d) {
+          return d.name;
+        });
+      changes.enter()
+        .append("div")
+        .text(function(d) {
+          return d.name;
+        })
+        .on("mouseenter", (d, i) => {
+          highlight(d.name)
+        })
+        .on("mouseeleave", (d, i) => {
+          unHighlight()
+        });
+    }
+
+    function draw(countries) {
+        var dataPoints = viz.selectAll("circle").data(countries, (d) => d.name);
+        xScale.domain([0, d3.max(countries, (country) => country.income[year])]);
+        yScale.domain(d3.extent(countries, (country) => country.lifeExpectancy[year] ));
+        sScale.domain(d3.extent(countries, (country) => country.population[year]));
+
+        var colorScale = d3.scale.category20();
+
+        var xAxis = d3.svg.axis()
+            .tickFormat((d) => d3.formatPrefix(d).scale(d) + d3.formatPrefix(d).symbol)
+            .scale(xScale)
+            .tickSize(-innerHeight)
+            .orient("bottom");
+          
+        var yAxis = d3.svg.axis()
+            .scale(yScale)
+            .tickSize(-innerWidth)                
+            .orient("left");
+        xAxisGroup.call(xAxis);
+        yAxisGroup.call(yAxis);
+
+        dataPoints.enter()
+          .append("circle")
+          .on("click", (d, i) => alert(d.name))
+          .on("mouseenter", function(d, i) {
+            highlight(d.name);
+            d3.select("#tooltip").style({
+              visibility: "visible",
+              top: d3.event.clientY,
+              left: d3.event.clientX,
+              opacity: 1
+            }).text(d.name);
+          })
+          .on("mouseleave", function(d, i) {
+            unHighlight();
+            d3.select("#tooltip").style({
+              visibility: undefined,
+              opacity: 0
+            });
+          });
+        dataPoints
+          .transition()
+          .attr("cx", (country, i) => xScale(country.income[year] ))
+          .attr("cy", (country, i) => yScale(country.lifeExpectancy[year] ))
+          .attr("fill", (country, i) => colorScale(country.region))
+          .attr("r", (country, i) => Math.sqrt(sScale(country.population[year])/Math.PI))
+            
+    }
+
+  </script>
 
 </html>
